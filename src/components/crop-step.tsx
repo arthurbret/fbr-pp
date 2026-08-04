@@ -4,19 +4,29 @@ import { useCallback, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import "react-easy-crop/react-easy-crop.css";
 
+import { ModeSelector } from "@/components/mode-selector";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import type { ProcessingMode } from "@/lib/portrait";
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
 
 type CropStepProps = {
   imageUrl: string;
+  mode: ProcessingMode;
+  onModeChange: (mode: ProcessingMode) => void;
   onCancel: () => void;
   onConfirm: (area: Area) => void;
 };
 
-export function CropStep({ imageUrl, onCancel, onConfirm }: CropStepProps) {
+export function CropStep({
+  imageUrl,
+  mode,
+  onModeChange,
+  onCancel,
+  onConfirm,
+}: CropStepProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(MIN_ZOOM);
   const [area, setArea] = useState<Area | null>(null);
@@ -52,6 +62,11 @@ export function CropStep({ imageUrl, onCancel, onConfirm }: CropStepProps) {
           setZoom(Array.isArray(value) ? value[0] : value)
         }
       />
+
+      <div className="space-y-1.5">
+        <p className="text-sm text-muted-foreground">Où traiter la photo ?</p>
+        <ModeSelector value={mode} onChange={onModeChange} />
+      </div>
 
       <div className="flex gap-2">
         <Button variant="outline" size="lg" onClick={onCancel}>

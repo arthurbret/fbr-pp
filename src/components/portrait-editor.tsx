@@ -15,7 +15,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { processPortrait } from "@/lib/portrait";
+import {
+  Progress,
+  ProgressLabel,
+  ProgressValue,
+} from "@/components/ui/progress";
+import {
+  processPortrait,
+  type ProcessingMode,
+  type ProgressReport,
+} from "@/lib/portrait";
 
 type Step = "upload" | "crop" | "processing" | "result";
 
@@ -33,10 +42,17 @@ const STEP_DESCRIPTIONS: Record<Step, string> = {
   result: "Votre portrait est prêt à être téléchargé.",
 };
 
+const PROGRESS_LABELS: Record<ProgressReport["stage"], string> = {
+  download: "Téléchargement du modèle",
+  compute: "Détourage en cours",
+};
+
 export function PortraitEditor() {
   const [step, setStep] = useState<Step>("upload");
+  const [mode, setMode] = useState<ProcessingMode>("cloud");
   const [source, setSource] = useState<Preview | null>(null);
   const [result, setResult] = useState<Preview | null>(null);
+  const [progress, setProgress] = useState<ProgressReport | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function reset() {
@@ -52,10 +68,15 @@ export function PortraitEditor() {
     if (!source) return;
 
     setStep("processing");
+    setProgress(null);
     setError(null);
 
     try {
-      setResult(createPreview(await processPortrait(source.blob, area)));
+      setResult(
+        createPreview(
+          await processPortrait(source.blob, area, mode, setProgress),
+        ),
+      );
       setStep("result");
     } catch (cause) {
       console.error(cause);
@@ -94,6 +115,8 @@ export function PortraitEditor() {
         {step === "crop" && source && (
           <CropStep
             imageUrl={source.url}
+            mode={mode}
+            onModeChange={setMode}
             onCancel={reset}
             onConfirm={handleConfirm}
           />
@@ -101,10 +124,19 @@ export function PortraitEditor() {
 
         {step === "processing" && (
           <div className="flex aspect-square w-full flex-col items-center justify-center gap-4 rounded-lg bg-muted p-8">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
-            <p className="text-center text-sm text-muted-foreground">
-              Détourage en cours…
-            </p>
+            {progress ? (
+              <Progress value={progress.percent} className="w-full">
+                <ProgressLabel>{PROGRESS_LABELS[progress.stage]}</ProgressLabel>
+                <ProgressValue />
+              </Progress>
+            ) : (
+              <>
+                <Loader2 className="size-6 animate-spin text-muted-foreground" />
+                <p className="text-center text-sm text-muted-foreground">
+                  Détourage en cours…
+                </p>
+              </>
+            )}
           </div>
         )}
 

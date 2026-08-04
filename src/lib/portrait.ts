@@ -108,8 +108,13 @@ export async function composePortrait(cutout: Blob): Promise<Blob> {
   return canvasToBlob(canvas);
 }
 
+/** Where the segmentation model runs. */
+export type ProcessingMode = "cloud" | "local";
+
+export type ProgressReport = { stage: "download" | "compute"; percent: number };
+
 /** Asks the server to run the segmentation model and return a transparent cutout. */
-async function removeImageBackground(image: Blob): Promise<Blob> {
+async function removeInCloud(image: Blob): Promise<Blob> {
   const body = new FormData();
   body.append("image", image, "crop.png");
 
@@ -125,9 +130,36 @@ async function removeImageBackground(image: Blob): Promise<Blob> {
   return response.blob();
 }
 
+/** Runs the segmentation model in the browser, so the photo never leaves the device. */
+async function removeInBrowser(
+  image: Blob,
+  onProgress: (report: ProgressReport) => void,
+): Promise<Blob> {
+  const { removeBackground } = await import("@imgly/background-removal");
+
+  return removeBackground(image, {
+    output: { format: "image/png" },
+    progress: (key, current, total) => {
+      onProgress({
+        stage: key.startsWith("fetch") ? "download" : "compute",
+        percent: total > 0 ? Math.round((current / total) * 100) : 0,
+      });
+    },
+  });
+}
+
 /** Full pipeline: crop, remove the background, then recompose the portrait. */
-export async function processPortrait(source: Blob, area: Area): Promise<Blob> {
+export async function processPortrait(
+  source: Blob,
+  area: Area,
+  mode: ProcessingMode,
+  onProgress: (report: ProgressReport) => void,
+): Promise<Blob> {
   const cropped = await cropToSquare(source, area);
-  const cutout = await removeImageBackground(cropped);
+  const cutout =
+    mode === "local"
+      ? await removeInBrowser(cropped, onProgress)
+      : await removeInCloud(cropped);
+
   return composePortrait(cutout);
 }
