@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# fbr-pp
 
-## Getting Started
+Application Next.js qui transforme une photo de visage en portrait carré sur fond
+bleu uni, avec un fin contour blanc autour du sujet.
 
-First, run the development server:
+## Fonctionnement
+
+1. L'utilisateur dépose une photo (glisser-déposer ou sélection de fichier).
+2. Il recadre son visage au format carré, avec un zoom réglable.
+3. Le fond est retiré, remplacé par un bleu foncé et le sujet est entouré d'un
+   trait blanc fin.
+4. Le portrait final est téléchargeable en PNG 1024 × 1024.
+
+Tout le traitement se fait dans le navigateur : aucune image n'est envoyée sur un
+serveur. Le modèle de segmentation (~40 Mo) est téléchargé au premier détourage
+puis mis en cache par le navigateur.
+
+## Stack
+
+- [Next.js](https://nextjs.org) (App Router) et [shadcn/ui](https://ui.shadcn.com)
+- [`@imgly/background-removal`](https://github.com/imgly/background-removal-js)
+  pour la suppression du fond, côté client
+- [`react-easy-crop`](https://github.com/ValentinH/react-easy-crop) pour le recadrage
+
+Le rendu final (fond, contour, export) est fait au canvas dans
+[`src/lib/portrait.ts`](src/lib/portrait.ts), où sont aussi définis la couleur de
+fond, l'épaisseur du contour et la taille de sortie.
+
+> `@imgly/background-removal` est distribué sous licence AGPL-3.0. Un usage
+> commercial nécessite de respecter l'AGPL ou d'obtenir une licence auprès
+> d'IMG.LY.
+
+## Développement
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+L'application est disponible sur http://localhost:3000.
