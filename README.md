@@ -46,3 +46,19 @@ npm run dev
 ```
 
 L'application est disponible sur http://localhost:3000.
+
+## Déploiement
+
+Le `Dockerfile` produit une image autonome (build `standalone` de Next.js),
+prête pour Coolify : port `3000`, aucune variable d'environnement requise.
+
+```bash
+docker build -t fbr-pp . && docker run -p 3000:3000 fbr-pp
+```
+
+L'image est basée sur Debian et **non sur Alpine** : `onnxruntime-node` ne
+publie que des binaires liés à la glibc, qui ne peuvent pas se charger sur musl.
+Elle pèse environ 800 Mo, dont ~127 Mo de modèle ONNX et ~31 Mo de runtime natif.
+
+Prévoir au moins 2 Go de RAM sur la machine : l'inférence charge le modèle en
+mémoire à la première requête.
