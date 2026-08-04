@@ -6,19 +6,17 @@ import "react-easy-crop/react-easy-crop.css";
 
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useObjectUrl } from "@/hooks/use-object-url";
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
 
 type CropStepProps = {
-  file: File;
+  imageUrl: string;
   onCancel: () => void;
   onConfirm: (area: Area) => void;
 };
 
-export function CropStep({ file, onCancel, onConfirm }: CropStepProps) {
-  const imageUrl = useObjectUrl(file);
+export function CropStep({ imageUrl, onCancel, onConfirm }: CropStepProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(MIN_ZOOM);
   const [area, setArea] = useState<Area | null>(null);

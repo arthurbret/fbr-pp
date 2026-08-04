@@ -3,16 +3,13 @@
 import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useObjectUrl } from "@/hooks/use-object-url";
 
 type ResultStepProps = {
-  image: Blob;
+  imageUrl: string;
   onRestart: () => void;
 };
 
-export function ResultStep({ image, onRestart }: ResultStepProps) {
-  const imageUrl = useObjectUrl(image);
-
+export function ResultStep({ imageUrl, onRestart }: ResultStepProps) {
   function download() {
     const link = document.createElement("a");
     link.href = imageUrl;

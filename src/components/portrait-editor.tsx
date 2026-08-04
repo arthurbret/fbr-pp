@@ -23,6 +23,13 @@ import { processPortrait, type ProgressReport } from "@/lib/portrait";
 
 type Step = "upload" | "crop" | "processing" | "result";
 
+/** A blob together with the object URL used to display it. */
+type Preview = { blob: Blob; url: string };
+
+function createPreview(blob: Blob): Preview {
+  return { blob, url: URL.createObjectURL(blob) };
+}
+
 const STEP_DESCRIPTIONS: Record<Step, string> = {
   upload: "Commencez par déposer une photo de votre visage.",
   crop: "Cadrez votre visage dans le carré.",
@@ -37,8 +44,8 @@ const PROGRESS_LABELS: Record<ProgressReport["stage"], string> = {
 
 export function PortraitEditor() {
   const [step, setStep] = useState<Step>("upload");
-  const [file, setFile] = useState<File | null>(null);
-  const [result, setResult] = useState<Blob | null>(null);
+  const [source, setSource] = useState<Preview | null>(null);
+  const [result, setResult] = useState<Preview | null>(null);
   const [progress, setProgress] = useState<ProgressReport>({
     stage: "download",
     percent: 0,
@@ -46,26 +53,30 @@ export function PortraitEditor() {
   const [error, setError] = useState<string | null>(null);
 
   function reset() {
-    setStep("upload");
-    setFile(null);
+    if (source) URL.revokeObjectURL(source.url);
+    if (result) URL.revokeObjectURL(result.url);
+    setSource(null);
     setResult(null);
     setError(null);
+    setStep("upload");
   }
 
   async function handleConfirm(area: Area) {
-    if (!file) return;
+    if (!source) return;
 
     setStep("processing");
     setProgress({ stage: "download", percent: 0 });
     setError(null);
 
     try {
-      setResult(await processPortrait(file, area, setProgress));
+      setResult(
+        createPreview(await processPortrait(source.blob, area, setProgress)),
+      );
       setStep("result");
     } catch (cause) {
       console.error(cause);
       setError(
-        "Le traitement de l'image a échoué. Vérifiez votre connexion et réessayez."
+        "Le traitement de l'image a échoué. Vérifiez votre connexion et réessayez.",
       );
       setStep("crop");
     }
@@ -88,21 +99,25 @@ export function PortraitEditor() {
 
         {step === "upload" && (
           <ImageDropzone
-            onSelect={(selected) => {
-              setFile(selected);
+            onSelect={(file) => {
+              setSource(createPreview(file));
               setError(null);
               setStep("crop");
             }}
           />
         )}
 
-        {step === "crop" && file && (
-          <CropStep file={file} onCancel={reset} onConfirm={handleConfirm} />
+        {step === "crop" && source && (
+          <CropStep
+            imageUrl={source.url}
+            onCancel={reset}
+            onConfirm={handleConfirm}
+          />
         )}
 
         {step === "processing" && (
           <div className="flex aspect-square w-full flex-col items-center justify-center gap-4 rounded-lg bg-muted p-8">
-            <Progress value={progress.percent}>
+            <Progress value={progress.percent} className="w-full">
               <ProgressLabel>{PROGRESS_LABELS[progress.stage]}</ProgressLabel>
               <ProgressValue />
             </Progress>
@@ -114,7 +129,7 @@ export function PortraitEditor() {
         )}
 
         {step === "result" && result && (
-          <ResultStep image={result} onRestart={reset} />
+          <ResultStep imageUrl={result.url} onRestart={reset} />
         )}
       </CardContent>
     </Card>
