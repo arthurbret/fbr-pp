@@ -11,14 +11,12 @@ export const OUTLINE_COLOR = "#ffffff";
 const OUTLINE_WIDTH = Math.round(OUTPUT_SIZE * 0.005);
 const OUTLINE_STEPS = 64;
 
-export type ProgressReport = { stage: "download" | "compute"; percent: number };
-
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.addEventListener("load", () => resolve(image));
     image.addEventListener("error", () =>
-      reject(new Error("Impossible de lire cette image."))
+      reject(new Error("Impossible de lire cette image.")),
     );
     image.src = src;
   });
@@ -44,7 +42,7 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 
 async function withObjectUrl<T>(
   blob: Blob,
-  fn: (url: string) => Promise<T>
+  fn: (url: string) => Promise<T>,
 ): Promise<T> {
   const url = URL.createObjectURL(blob);
   try {
@@ -68,7 +66,7 @@ export async function cropToSquare(source: Blob, area: Area): Promise<Blob> {
     0,
     0,
     OUTPUT_SIZE,
-    OUTPUT_SIZE
+    OUTPUT_SIZE,
   );
 
   return canvasToBlob(canvas);
@@ -101,7 +99,7 @@ export async function composePortrait(cutout: Blob): Promise<Blob> {
     ctx.drawImage(
       silhouette,
       Math.cos(angle) * OUTLINE_WIDTH,
-      Math.sin(angle) * OUTLINE_WIDTH
+      Math.sin(angle) * OUTLINE_WIDTH,
     );
   }
 
@@ -110,31 +108,26 @@ export async function composePortrait(cutout: Blob): Promise<Blob> {
   return canvasToBlob(canvas);
 }
 
-/** Runs the segmentation model in the browser and returns a transparent cutout. */
-async function removeImageBackground(
-  image: Blob,
-  onProgress: (report: ProgressReport) => void
-): Promise<Blob> {
-  const { removeBackground } = await import("@imgly/background-removal");
+/** Asks the server to run the segmentation model and return a transparent cutout. */
+async function removeImageBackground(image: Blob): Promise<Blob> {
+  const body = new FormData();
+  body.append("image", image, "crop.png");
 
-  return removeBackground(image, {
-    output: { format: "image/png" },
-    progress: (key, current, total) => {
-      onProgress({
-        stage: key.startsWith("fetch") ? "download" : "compute",
-        percent: total > 0 ? Math.round((current / total) * 100) : 0,
-      });
-    },
+  const response = await fetch("/api/remove-background", {
+    method: "POST",
+    body,
   });
+
+  if (!response.ok) {
+    throw new Error(`Le détourage a échoué (HTTP ${response.status}).`);
+  }
+
+  return response.blob();
 }
 
 /** Full pipeline: crop, remove the background, then recompose the portrait. */
-export async function processPortrait(
-  source: Blob,
-  area: Area,
-  onProgress: (report: ProgressReport) => void
-): Promise<Blob> {
+export async function processPortrait(source: Blob, area: Area): Promise<Blob> {
   const cropped = await cropToSquare(source, area);
-  const cutout = await removeImageBackground(cropped, onProgress);
+  const cutout = await removeImageBackground(cropped);
   return composePortrait(cutout);
 }

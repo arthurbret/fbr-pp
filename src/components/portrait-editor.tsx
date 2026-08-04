@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import type { Area } from "react-easy-crop";
 
 import { CropStep } from "@/components/crop-step";
@@ -14,12 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Progress,
-  ProgressLabel,
-  ProgressValue,
-} from "@/components/ui/progress";
-import { processPortrait, type ProgressReport } from "@/lib/portrait";
+import { processPortrait } from "@/lib/portrait";
 
 type Step = "upload" | "crop" | "processing" | "result";
 
@@ -33,23 +29,14 @@ function createPreview(blob: Blob): Preview {
 const STEP_DESCRIPTIONS: Record<Step, string> = {
   upload: "Commencez par déposer une photo de votre visage.",
   crop: "Cadrez votre visage dans le carré.",
-  processing: "Le fond est retiré directement dans votre navigateur.",
+  processing: "Le fond est retiré, cela prend quelques secondes.",
   result: "Votre portrait est prêt à être téléchargé.",
-};
-
-const PROGRESS_LABELS: Record<ProgressReport["stage"], string> = {
-  download: "Téléchargement du modèle",
-  compute: "Détourage en cours",
 };
 
 export function PortraitEditor() {
   const [step, setStep] = useState<Step>("upload");
   const [source, setSource] = useState<Preview | null>(null);
   const [result, setResult] = useState<Preview | null>(null);
-  const [progress, setProgress] = useState<ProgressReport>({
-    stage: "download",
-    percent: 0,
-  });
   const [error, setError] = useState<string | null>(null);
 
   function reset() {
@@ -65,13 +52,10 @@ export function PortraitEditor() {
     if (!source) return;
 
     setStep("processing");
-    setProgress({ stage: "download", percent: 0 });
     setError(null);
 
     try {
-      setResult(
-        createPreview(await processPortrait(source.blob, area, setProgress)),
-      );
+      setResult(createPreview(await processPortrait(source.blob, area)));
       setStep("result");
     } catch (cause) {
       console.error(cause);
@@ -117,13 +101,9 @@ export function PortraitEditor() {
 
         {step === "processing" && (
           <div className="flex aspect-square w-full flex-col items-center justify-center gap-4 rounded-lg bg-muted p-8">
-            <Progress value={progress.percent} className="w-full">
-              <ProgressLabel>{PROGRESS_LABELS[progress.stage]}</ProgressLabel>
-              <ProgressValue />
-            </Progress>
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
             <p className="text-center text-sm text-muted-foreground">
-              Le premier traitement peut prendre un moment, le modèle est
-              téléchargé une seule fois.
+              Détourage en cours…
             </p>
           </div>
         )}
