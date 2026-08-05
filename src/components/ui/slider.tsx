@@ -10,10 +10,13 @@ function Slider({
   max = 100,
   ...props
 }: SliderPrimitive.Root.Props) {
-  const _values = Array.isArray(value)
-    ? value
-    : Array.isArray(defaultValue)
-      ? defaultValue
+  // A numeric value drives a single-thumb slider; only fall back to a range
+  // when neither value nor defaultValue is provided.
+  const current = value ?? defaultValue
+  const _values = Array.isArray(current)
+    ? current
+    : typeof current === "number"
+      ? [current]
       : [min, max]
 
   return (
