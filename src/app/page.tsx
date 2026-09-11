@@ -1,9 +1,20 @@
-import { PortraitEditor } from "@/components/portrait-editor";
+import { connection } from "next/server";
 
-export default function Home() {
+import { BrandHeader } from "@/components/brand-header";
+import { PortraitEditor } from "@/components/portrait-editor";
+import { getEnabledProcessingModes } from "@/lib/processing-modes";
+
+export default async function Home() {
+  // Render per request so the processing modes follow the runtime environment
+  // instead of being frozen at build time.
+  await connection();
+
+  // Anchored to the top rather than centered, so switching to a taller step
+  // does not shift the logos and the controls above it.
   return (
-    <main className="flex flex-1 items-center justify-center p-6">
-      <PortraitEditor />
+    <main className="flex flex-1 flex-col items-center gap-6 p-6 sm:py-12">
+      <BrandHeader />
+      <PortraitEditor modes={getEnabledProcessingModes()} />
     </main>
   );
 }

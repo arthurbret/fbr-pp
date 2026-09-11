@@ -1,6 +1,8 @@
 import { removeBackground } from "@imgly/background-removal-node";
 import { NextResponse } from "next/server";
 
+import { isCloudProcessingEnabled } from "@/lib/processing-modes";
+
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
@@ -8,6 +10,14 @@ export const maxDuration = 60;
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 export async function POST(request: Request) {
+  // Hiding the selector is not enough: the endpoint must refuse to process too.
+  if (!isCloudProcessingEnabled()) {
+    return NextResponse.json(
+      { error: "Le traitement cloud est désactivé." },
+      { status: 404 },
+    );
+  }
+
   const formData = await request.formData();
   const image = formData.get("image");
 

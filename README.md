@@ -1,14 +1,26 @@
 # fbr-pp
 
 Application Next.js qui transforme une photo de visage en portrait carré sur fond
-bleu uni, avec un fin contour blanc autour du sujet.
+bleu uni, avec un fin contour blanc autour du sujet. À défaut de photo, elle
+génère un portrait avec les initiales de l'utilisateur.
 
 ## Fonctionnement
 
+Un sélecteur **Photo / Initiales** permet de choisir le type de portrait.
+
+Avec des **initiales** (jusqu'à trois lettres), elles s'affichent en blanc au
+centre, sur le même fond bleu, avec un aperçu en direct. La police est Avenir,
+qui n'est pas une police web : elle est utilisée là où le système la fournit
+(macOS, iOS), et remplacée par Nunito Sans ailleurs (Windows, Android).
+
+Avec une **photo** :
+
 1. L'utilisateur dépose une photo (glisser-déposer ou sélection de fichier).
 2. Il recadre son visage au format carré, avec un zoom réglable.
-3. Le fond est retiré, remplacé par un bleu foncé et le sujet est entouré d'un
-   trait blanc fin.
+3. Le fond est retiré, remplacé par un bleu uni (`#009AA6`) et le sujet est
+   entouré d'un trait blanc de 7 px. Le masque est lissé avant de tracer ce
+   contour, pour qu'il suive la forme générale de la tête plutôt que chaque
+   mèche qui dépasse.
 4. Le portrait final est téléchargeable en PNG 1024 × 1024.
 
 Le recadrage et le rendu final sont toujours faits au canvas dans le navigateur.
@@ -21,6 +33,22 @@ Seul le détourage change d'endroit, au choix de l'utilisateur :
   l'appareil. Le modèle (~90 Mo) est téléchargé au premier détourage puis mis en
   cache, avec une barre de progression.
 
+## Configuration
+
+Les deux modes sont actifs par défaut. Chacun se désactive par une variable
+d'environnement (voir [`.env.example`](.env.example)) :
+
+| Variable                  | Défaut | Effet si `false`                                |
+| ------------------------- | ------ | ----------------------------------------------- |
+| `ENABLE_CLOUD_PROCESSING` | `true` | Mode cloud masqué, l'API répond `404`           |
+| `ENABLE_LOCAL_PROCESSING` | `true` | Mode local masqué, seul le cloud est proposé    |
+
+Quand un seul mode reste actif, le sélecteur Cloud / Local n'est plus affiché.
+Désactiver les deux fait échouer le rendu de la page avec une erreur explicite.
+
+Ces variables sont lues à chaque requête côté serveur, pas au build : il suffit
+de les modifier puis de redémarrer le conteneur, sans reconstruire l'image.
+
 ## Stack
 
 - [Next.js](https://nextjs.org) (App Router) et [shadcn/ui](https://ui.shadcn.com)
@@ -32,7 +60,9 @@ Seul le détourage change d'endroit, au choix de l'utilisateur :
 
 Le rendu final (fond, contour, export) est fait au canvas dans
 [`src/lib/portrait.ts`](src/lib/portrait.ts), où sont aussi définis la couleur de
-fond, l'épaisseur du contour et la taille de sortie.
+fond, l'épaisseur du contour et la taille de sortie. Le lissage du masque est
+dans [`src/lib/mask.ts`](src/lib/mask.ts) : `SMOOTHING_RADIUS` règle le
+compromis entre un contour rond et la fidélité aux détails.
 
 > `@imgly/background-removal` est distribué sous licence AGPL-3.0. Un usage
 > commercial nécessite de respecter l'AGPL ou d'obtenir une licence auprès
@@ -50,10 +80,17 @@ L'application est disponible sur http://localhost:3000.
 ## Déploiement
 
 Le `Dockerfile` produit une image autonome (build `standalone` de Next.js),
-prête pour Coolify : port `3000`, aucune variable d'environnement requise.
+prête pour Coolify : port `3000`, aucune variable d'environnement requise (les
+variables de [configuration](#configuration) sont optionnelles).
 
 ```bash
 docker build -t fbr-pp . && docker run -p 3000:3000 fbr-pp
+```
+
+Pour ne proposer que le mode local, par exemple :
+
+```bash
+docker run -p 3000:3000 -e ENABLE_CLOUD_PROCESSING=false fbr-pp
 ```
 
 L'image est basée sur Debian et **non sur Alpine** : `onnxruntime-node` ne
