@@ -47,9 +47,14 @@ const PROGRESS_LABELS: Record<ProgressReport["stage"], string> = {
   compute: "Détourage en cours",
 };
 
-export function PortraitEditor() {
+type PortraitEditorProps = {
+  /** Modes enabled on the server, the first one being the default. */
+  modes: ProcessingMode[];
+};
+
+export function PortraitEditor({ modes }: PortraitEditorProps) {
   const [step, setStep] = useState<Step>("upload");
-  const [mode, setMode] = useState<ProcessingMode>("cloud");
+  const [mode, setMode] = useState<ProcessingMode>(modes[0]);
   const [source, setSource] = useState<Preview | null>(null);
   const [result, setResult] = useState<Preview | null>(null);
   const [progress, setProgress] = useState<ProgressReport | null>(null);
@@ -115,6 +120,7 @@ export function PortraitEditor() {
         {step === "crop" && source && (
           <CropStep
             imageUrl={source.url}
+            modes={modes}
             mode={mode}
             onModeChange={setMode}
             onCancel={reset}

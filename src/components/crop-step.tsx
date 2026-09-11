@@ -14,6 +14,7 @@ const MAX_ZOOM = 3;
 
 type CropStepProps = {
   imageUrl: string;
+  modes: ProcessingMode[];
   mode: ProcessingMode;
   onModeChange: (mode: ProcessingMode) => void;
   onCancel: () => void;
@@ -22,6 +23,7 @@ type CropStepProps = {
 
 export function CropStep({
   imageUrl,
+  modes,
   mode,
   onModeChange,
   onCancel,
@@ -63,10 +65,12 @@ export function CropStep({
         }
       />
 
-      <div className="space-y-1.5">
-        <p className="text-sm text-muted-foreground">Où traiter la photo ?</p>
-        <ModeSelector value={mode} onChange={onModeChange} />
-      </div>
+      {modes.length > 1 && (
+        <div className="space-y-1.5">
+          <p className="text-sm text-muted-foreground">Où traiter la photo ?</p>
+          <ModeSelector value={mode} onChange={onModeChange} />
+        </div>
+      )}
 
       <div className="flex gap-2">
         <Button variant="outline" size="lg" onClick={onCancel}>

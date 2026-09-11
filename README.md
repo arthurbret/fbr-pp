@@ -21,6 +21,22 @@ Seul le détourage change d'endroit, au choix de l'utilisateur :
   l'appareil. Le modèle (~90 Mo) est téléchargé au premier détourage puis mis en
   cache, avec une barre de progression.
 
+## Configuration
+
+Les deux modes sont actifs par défaut. Chacun se désactive par une variable
+d'environnement (voir [`.env.example`](.env.example)) :
+
+| Variable                  | Défaut | Effet si `false`                                |
+| ------------------------- | ------ | ----------------------------------------------- |
+| `ENABLE_CLOUD_PROCESSING` | `true` | Mode cloud masqué, l'API répond `404`           |
+| `ENABLE_LOCAL_PROCESSING` | `true` | Mode local masqué, seul le cloud est proposé    |
+
+Quand un seul mode reste actif, le sélecteur Cloud / Local n'est plus affiché.
+Désactiver les deux fait échouer le rendu de la page avec une erreur explicite.
+
+Ces variables sont lues à chaque requête côté serveur, pas au build : il suffit
+de les modifier puis de redémarrer le conteneur, sans reconstruire l'image.
+
 ## Stack
 
 - [Next.js](https://nextjs.org) (App Router) et [shadcn/ui](https://ui.shadcn.com)
@@ -50,10 +66,17 @@ L'application est disponible sur http://localhost:3000.
 ## Déploiement
 
 Le `Dockerfile` produit une image autonome (build `standalone` de Next.js),
-prête pour Coolify : port `3000`, aucune variable d'environnement requise.
+prête pour Coolify : port `3000`, aucune variable d'environnement requise (les
+variables de [configuration](#configuration) sont optionnelles).
 
 ```bash
 docker build -t fbr-pp . && docker run -p 3000:3000 fbr-pp
+```
+
+Pour ne proposer que le mode local, par exemple :
+
+```bash
+docker run -p 3000:3000 -e ENABLE_CLOUD_PROCESSING=false fbr-pp
 ```
 
 L'image est basée sur Debian et **non sur Alpine** : `onnxruntime-node` ne
