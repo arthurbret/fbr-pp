@@ -102,7 +102,7 @@ export function PortraitEditor({ modes }: PortraitEditorProps) {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Portrait sur fond bleu</CardTitle>
+        <CardTitle>Photo de profil FBR</CardTitle>
         <CardDescription>
           {kind === "initials" ? INITIALS_DESCRIPTION : STEP_DESCRIPTIONS[step]}
         </CardDescription>
