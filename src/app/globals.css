@@ -129,5 +129,8 @@
   }
   html {
     @apply font-sans;
+    /* Keep room for the scrollbar, so the page does not jump sideways when a
+       taller step makes it appear. */
+    scrollbar-gutter: stable;
   }
 }

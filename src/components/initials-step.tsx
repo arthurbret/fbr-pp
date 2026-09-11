@@ -48,6 +48,18 @@ export function InitialsStep({ initials, onChange }: InitialsStepProps) {
 
   return (
     <div className="space-y-4">
+      {/* First, so it lands exactly where the photo dropzone was. */}
+      <div className="aspect-square w-full overflow-hidden rounded-lg bg-muted">
+        <canvas
+          ref={canvasRef}
+          width={OUTPUT_SIZE}
+          height={OUTPUT_SIZE}
+          role="img"
+          aria-label={`Initiales ${initials} sur fond bleu`}
+          className="size-full font-initials"
+        />
+      </div>
+
       <Field>
         <FieldLabel htmlFor="initials">Vos initiales</FieldLabel>
         <Input
@@ -60,17 +72,6 @@ export function InitialsStep({ initials, onChange }: InitialsStepProps) {
           onChange={(event) => onChange(normalizeInitials(event.target.value))}
         />
       </Field>
-
-      <div className="aspect-square w-full overflow-hidden rounded-lg bg-muted">
-        <canvas
-          ref={canvasRef}
-          width={OUTPUT_SIZE}
-          height={OUTPUT_SIZE}
-          role="img"
-          aria-label={`Initiales ${initials} sur fond bleu`}
-          className="size-full font-initials"
-        />
-      </div>
 
       <Button
         size="lg"

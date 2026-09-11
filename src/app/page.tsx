@@ -9,8 +9,10 @@ export default async function Home() {
   // instead of being frozen at build time.
   await connection();
 
+  // Anchored to the top rather than centered, so switching to a taller step
+  // does not shift the logos and the controls above it.
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6 p-6">
+    <main className="flex flex-1 flex-col items-center gap-6 p-6 sm:py-12">
       <BrandHeader />
       <PortraitEditor modes={getEnabledProcessingModes()} />
     </main>
