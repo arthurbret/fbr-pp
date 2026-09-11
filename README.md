@@ -1,9 +1,19 @@
 # fbr-pp
 
 Application Next.js qui transforme une photo de visage en portrait carré sur fond
-bleu uni, avec un fin contour blanc autour du sujet.
+bleu uni, avec un fin contour blanc autour du sujet. À défaut de photo, elle
+génère un portrait avec les initiales de l'utilisateur.
 
 ## Fonctionnement
+
+Un sélecteur **Photo / Initiales** permet de choisir le type de portrait.
+
+Avec des **initiales** (jusqu'à trois lettres), elles s'affichent en blanc au
+centre, sur le même fond bleu, avec un aperçu en direct. La police est Avenir,
+qui n'est pas une police web : elle est utilisée là où le système la fournit
+(macOS, iOS), et remplacée par Nunito Sans ailleurs (Windows, Android).
+
+Avec une **photo** :
 
 1. L'utilisateur dépose une photo (glisser-déposer ou sélection de fichier).
 2. Il recadre son visage au format carré, avec un zoom réglable.

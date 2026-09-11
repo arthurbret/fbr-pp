@@ -126,6 +126,72 @@ export async function composePortrait(cutout: Blob): Promise<Blob> {
   return canvasToBlob(canvas);
 }
 
+/** What the portrait shows: the user's photo, or their initials. */
+export type PortraitKind = "photo" | "initials";
+
+const INITIALS_MAX_LENGTH = 3;
+const INITIALS_COLOR = "#ffffff";
+const INITIALS_FONT_WEIGHT = 600;
+/** Font size of the initials, and widest share of the image they may span. */
+const INITIALS_FONT_SIZE = OUTPUT_SIZE * 0.4;
+const INITIALS_MAX_WIDTH = OUTPUT_SIZE * 0.7;
+
+/** Keeps letters only, uppercased, up to INITIALS_MAX_LENGTH of them. */
+export function normalizeInitials(value: string) {
+  return Array.from(value.replace(/\P{L}/gu, "").toLocaleUpperCase("fr"))
+    .slice(0, INITIALS_MAX_LENGTH)
+    .join("");
+}
+
+function initialsFont(fontFamily: string, size = INITIALS_FONT_SIZE) {
+  return `${INITIALS_FONT_WEIGHT} ${size}px ${fontFamily}`;
+}
+
+/** Web fonts load lazily: waits for the glyphs drawInitials is about to use. */
+export async function loadInitialsFont(fontFamily: string, initials: string) {
+  await document.fonts.load(initialsFont(fontFamily), initials);
+}
+
+/**
+ * Draws the initials in white, centered on the portrait background.
+ * `fontFamily` is a CSS font stack, loaded beforehand with loadInitialsFont.
+ */
+export function drawInitials(
+  ctx: CanvasRenderingContext2D,
+  initials: string,
+  fontFamily: string,
+) {
+  ctx.fillStyle = BACKGROUND_COLOR;
+  ctx.fillRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+  if (!initials) return;
+
+  ctx.font = initialsFont(fontFamily);
+  const width = ctx.measureText(initials).width;
+  if (width > INITIALS_MAX_WIDTH) {
+    ctx.font = initialsFont(
+      fontFamily,
+      (INITIALS_FONT_SIZE * INITIALS_MAX_WIDTH) / width,
+    );
+  }
+
+  // Center the drawn glyphs themselves rather than the font's line box and
+  // advance widths, which leave uneven room around capitals.
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  const {
+    actualBoundingBoxLeft: left,
+    actualBoundingBoxRight: right,
+    actualBoundingBoxAscent: ascent,
+    actualBoundingBoxDescent: descent,
+  } = ctx.measureText(initials);
+  ctx.fillStyle = INITIALS_COLOR;
+  ctx.fillText(
+    initials,
+    (OUTPUT_SIZE + left - right) / 2,
+    (OUTPUT_SIZE + ascent - descent) / 2,
+  );
+}
+
 /** Where the segmentation model runs. */
 export type ProcessingMode = "cloud" | "local";
 

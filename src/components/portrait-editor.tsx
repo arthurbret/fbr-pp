@@ -6,6 +6,8 @@ import type { Area } from "react-easy-crop";
 
 import { CropStep } from "@/components/crop-step";
 import { ImageDropzone } from "@/components/image-dropzone";
+import { InitialsStep } from "@/components/initials-step";
+import { KindSelector } from "@/components/kind-selector";
 import { ResultStep } from "@/components/result-step";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -22,6 +24,7 @@ import {
 } from "@/components/ui/progress";
 import {
   processPortrait,
+  type PortraitKind,
   type ProcessingMode,
   type ProgressReport,
 } from "@/lib/portrait";
@@ -42,6 +45,8 @@ const STEP_DESCRIPTIONS: Record<Step, string> = {
   result: "Votre portrait est prêt à être téléchargé.",
 };
 
+const INITIALS_DESCRIPTION = "Saisissez vos initiales, jusqu'à trois lettres.";
+
 const PROGRESS_LABELS: Record<ProgressReport["stage"], string> = {
   download: "Téléchargement du modèle",
   compute: "Détourage en cours",
@@ -53,6 +58,8 @@ type PortraitEditorProps = {
 };
 
 export function PortraitEditor({ modes }: PortraitEditorProps) {
+  const [kind, setKind] = useState<PortraitKind>("photo");
+  const [initials, setInitials] = useState("");
   const [step, setStep] = useState<Step>("upload");
   const [mode, setMode] = useState<ProcessingMode>(modes[0]);
   const [source, setSource] = useState<Preview | null>(null);
@@ -96,58 +103,73 @@ export function PortraitEditor({ modes }: PortraitEditorProps) {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle>Portrait sur fond bleu</CardTitle>
-        <CardDescription>{STEP_DESCRIPTIONS[step]}</CardDescription>
+        <CardDescription>
+          {kind === "initials" ? INITIALS_DESCRIPTION : STEP_DESCRIPTIONS[step]}
+        </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {error && (
-          <Alert variant="destructive">
-            <AlertTitle>Une erreur est survenue</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+        {/* Hidden while a photo is processed, so the result cannot land unseen. */}
+        {step !== "processing" && (
+          <KindSelector value={kind} onChange={setKind} />
         )}
 
-        {step === "upload" && (
-          <ImageDropzone
-            onSelect={(file) => {
-              setSource(createPreview(file));
-              setError(null);
-              setStep("crop");
-            }}
-          />
-        )}
-
-        {step === "crop" && source && (
-          <CropStep
-            imageUrl={source.url}
-            modes={modes}
-            mode={mode}
-            onModeChange={setMode}
-            onCancel={reset}
-            onConfirm={handleConfirm}
-          />
-        )}
-
-        {step === "processing" && (
-          <div className="flex aspect-square w-full flex-col items-center justify-center gap-4 rounded-lg bg-muted p-8">
-            {progress ? (
-              <Progress value={progress.percent} className="w-full">
-                <ProgressLabel>{PROGRESS_LABELS[progress.stage]}</ProgressLabel>
-                <ProgressValue />
-              </Progress>
-            ) : (
-              <>
-                <Loader2 className="size-6 animate-spin text-muted-foreground" />
-                <p className="text-center text-sm text-muted-foreground">
-                  Détourage en cours…
-                </p>
-              </>
+        {kind === "initials" ? (
+          <InitialsStep initials={initials} onChange={setInitials} />
+        ) : (
+          <>
+            {error && (
+              <Alert variant="destructive">
+                <AlertTitle>Une erreur est survenue</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
-          </div>
-        )}
 
-        {step === "result" && result && (
-          <ResultStep imageUrl={result.url} onRestart={reset} />
+            {step === "upload" && (
+              <ImageDropzone
+                onSelect={(file) => {
+                  setSource(createPreview(file));
+                  setError(null);
+                  setStep("crop");
+                }}
+              />
+            )}
+
+            {step === "crop" && source && (
+              <CropStep
+                imageUrl={source.url}
+                modes={modes}
+                mode={mode}
+                onModeChange={setMode}
+                onCancel={reset}
+                onConfirm={handleConfirm}
+              />
+            )}
+
+            {step === "processing" && (
+              <div className="flex aspect-square w-full flex-col items-center justify-center gap-4 rounded-lg bg-muted p-8">
+                {progress ? (
+                  <Progress value={progress.percent} className="w-full">
+                    <ProgressLabel>
+                      {PROGRESS_LABELS[progress.stage]}
+                    </ProgressLabel>
+                    <ProgressValue />
+                  </Progress>
+                ) : (
+                  <>
+                    <Loader2 className="size-6 animate-spin text-muted-foreground" />
+                    <p className="text-center text-sm text-muted-foreground">
+                      Détourage en cours…
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+
+            {step === "result" && result && (
+              <ResultStep imageUrl={result.url} onRestart={reset} />
+            )}
+          </>
         )}
       </CardContent>
     </Card>

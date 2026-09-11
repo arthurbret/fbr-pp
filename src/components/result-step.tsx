@@ -3,6 +3,7 @@
 import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { downloadUrl } from "@/lib/download";
 
 type ResultStepProps = {
   imageUrl: string;
@@ -10,13 +11,6 @@ type ResultStepProps = {
 };
 
 export function ResultStep({ imageUrl, onRestart }: ResultStepProps) {
-  function download() {
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = "portrait.png";
-    link.click();
-  }
-
   return (
     <div className="space-y-4">
       <div className="aspect-square w-full overflow-hidden rounded-lg bg-muted">
@@ -32,7 +26,11 @@ export function ResultStep({ imageUrl, onRestart }: ResultStepProps) {
         <Button variant="outline" size="lg" onClick={onRestart}>
           Nouvelle photo
         </Button>
-        <Button size="lg" className="flex-1" onClick={download}>
+        <Button
+          size="lg"
+          className="flex-1"
+          onClick={() => downloadUrl(imageUrl, "portrait.png")}
+        >
           <Download />
           Télécharger
         </Button>
