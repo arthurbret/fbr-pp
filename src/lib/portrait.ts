@@ -8,7 +8,8 @@ export const BACKGROUND_COLOR = "#009AA6";
 
 /** Thin white stroke drawn around the subject. */
 export const OUTLINE_COLOR = "#ffffff";
-const OUTLINE_WIDTH = Math.round(OUTPUT_SIZE * 0.005);
+/** Stroke thickness in pixels of the exported image. */
+const OUTLINE_WIDTH = 7;
 const OUTLINE_STEPS = 64;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
