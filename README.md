@@ -8,7 +8,9 @@ bleu uni, avec un fin contour blanc autour du sujet.
 1. L'utilisateur dépose une photo (glisser-déposer ou sélection de fichier).
 2. Il recadre son visage au format carré, avec un zoom réglable.
 3. Le fond est retiré, remplacé par un bleu uni (`#009AA6`) et le sujet est
-   entouré d'un trait blanc de 7 px.
+   entouré d'un trait blanc de 7 px. Le masque est lissé avant de tracer ce
+   contour, pour qu'il suive la forme générale de la tête plutôt que chaque
+   mèche qui dépasse.
 4. Le portrait final est téléchargeable en PNG 1024 × 1024.
 
 Le recadrage et le rendu final sont toujours faits au canvas dans le navigateur.
@@ -48,7 +50,9 @@ de les modifier puis de redémarrer le conteneur, sans reconstruire l'image.
 
 Le rendu final (fond, contour, export) est fait au canvas dans
 [`src/lib/portrait.ts`](src/lib/portrait.ts), où sont aussi définis la couleur de
-fond, l'épaisseur du contour et la taille de sortie.
+fond, l'épaisseur du contour et la taille de sortie. Le lissage du masque est
+dans [`src/lib/mask.ts`](src/lib/mask.ts) : `SMOOTHING_RADIUS` règle le
+compromis entre un contour rond et la fidélité aux détails.
 
 > `@imgly/background-removal` est distribué sous licence AGPL-3.0. Un usage
 > commercial nécessite de respecter l'AGPL ou d'obtenir une licence auprès

@@ -1,5 +1,7 @@
 import type { Area } from "react-easy-crop";
 
+import { smoothMask } from "@/lib/mask";
+
 /** Side of the exported square image, in pixels. */
 export const OUTPUT_SIZE = 1024;
 
@@ -73,10 +75,17 @@ export async function cropToSquare(source: Blob, area: Area): Promise<Blob> {
   return canvasToBlob(canvas);
 }
 
-/** Turns a cutout into a flat white version of its own shape. */
-function createSilhouette(image: HTMLImageElement) {
+/** Turns a cutout into a flat white version of its smoothed shape. */
+function createSilhouette(subject: CanvasRenderingContext2D) {
+  const alpha = smoothMask(
+    subject.getImageData(0, 0, OUTPUT_SIZE, OUTPUT_SIZE),
+  );
+
   const { canvas, ctx } = createCanvas(OUTPUT_SIZE);
-  ctx.drawImage(image, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+  const mask = ctx.createImageData(OUTPUT_SIZE, OUTPUT_SIZE);
+  for (let i = 0; i < alpha.length; i++) mask.data[i * 4 + 3] = alpha[i];
+  ctx.putImageData(mask, 0, 0);
+
   ctx.globalCompositeOperation = "source-in";
   ctx.fillStyle = OUTLINE_COLOR;
   ctx.fillRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
@@ -86,15 +95,23 @@ function createSilhouette(image: HTMLImageElement) {
 /**
  * Draws the cutout on the solid background, with a thin white outline obtained
  * by stamping its silhouette all around it before the subject is drawn on top.
+ * The subject is trimmed to that same smoothed silhouette, so stray hair
+ * strands do not stick out of the outline.
  */
 export async function composePortrait(cutout: Blob): Promise<Blob> {
   const image = await withObjectUrl(cutout, loadImage);
+
+  const subject = createCanvas(OUTPUT_SIZE);
+  subject.ctx.drawImage(image, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+  const silhouette = createSilhouette(subject.ctx);
+  subject.ctx.globalCompositeOperation = "destination-in";
+  subject.ctx.drawImage(silhouette, 0, 0);
+
   const { canvas, ctx } = createCanvas(OUTPUT_SIZE);
 
   ctx.fillStyle = BACKGROUND_COLOR;
   ctx.fillRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
 
-  const silhouette = createSilhouette(image);
   for (let step = 0; step < OUTLINE_STEPS; step++) {
     const angle = (step / OUTLINE_STEPS) * Math.PI * 2;
     ctx.drawImage(
@@ -104,7 +121,7 @@ export async function composePortrait(cutout: Blob): Promise<Blob> {
     );
   }
 
-  ctx.drawImage(image, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+  ctx.drawImage(subject.canvas, 0, 0);
 
   return canvasToBlob(canvas);
 }
