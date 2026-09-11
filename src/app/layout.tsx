@@ -14,7 +14,7 @@ const mono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Portrait sur fond bleu",
+  title: "FBR PP",
   description:
     "Recadrez votre photo, détourez votre visage et téléchargez-le sur un fond bleu.",
 };
