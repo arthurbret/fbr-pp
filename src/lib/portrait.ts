@@ -3,8 +3,8 @@ import type { Area } from "react-easy-crop";
 /** Side of the exported square image, in pixels. */
 export const OUTPUT_SIZE = 1024;
 
-/** Solid dark blue used to replace the original background. */
-export const BACKGROUND_COLOR = "#0b2545";
+/** Solid teal blue used to replace the original background. */
+export const BACKGROUND_COLOR = "#009AA6";
 
 /** Thin white stroke drawn around the subject. */
 export const OUTLINE_COLOR = "#ffffff";

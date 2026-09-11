@@ -7,8 +7,8 @@ bleu uni, avec un fin contour blanc autour du sujet.
 
 1. L'utilisateur dépose une photo (glisser-déposer ou sélection de fichier).
 2. Il recadre son visage au format carré, avec un zoom réglable.
-3. Le fond est retiré, remplacé par un bleu foncé et le sujet est entouré d'un
-   trait blanc fin.
+3. Le fond est retiré, remplacé par un bleu uni (`#009AA6`) et le sujet est
+   entouré d'un trait blanc fin.
 4. Le portrait final est téléchargeable en PNG 1024 × 1024.
 
 Le recadrage et le rendu final sont toujours faits au canvas dans le navigateur.
